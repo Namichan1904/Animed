@@ -1,0 +1,1017 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Animed</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DM+Mono:wght@400;500&family=Zen+Maru+Gothic:wght@400;500;700&display=swap">
+<style>
+/* Layout concept: manga-panel UI for the realm map and cases; a dark twilight stage for story scenes.
+   Pink is the action color, cyan is XP, gold is lantern light and rank. */
+:root{
+  --bg:#EDF0FA; --panel:#FFFFFF; --ink:#141A3A; --muted:#566090; --line:#141A3A; --sh:#141A3A;
+  --accent:#D41E5E; --accent-ink:#FFFFFF; --mana:#0E8FB8; --gold:#F0B429; --on-gold:#1B1F4B;
+  --good:#12805A; --good-bg:#DDF5E9; --bad:#C62B38; --bad-bg:#FBE0E2; --tone:rgba(20,26,58,.12);
+  --overlay:rgba(12,16,48,.74); --track:#DDE2F5;
+  --skin:#FFD9C4; --coat:#FFFFFF; --hair:#4B3FD0; --mline:#1B1F4B;
+  --display:'Dela Gothic One','Arial Black',Impact,sans-serif;
+  --body:'Zen Maru Gothic',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'DM Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1030; --panel:#161B47; --ink:#EAEEFF; --muted:#A3ABDD; --line:#8F99F0; --sh:#04061A;
+    --accent:#FF5C93; --accent-ink:#1A0A14; --mana:#4FD1F0; --gold:#F2B33D;
+    --good:#3DD598; --good-bg:rgba(61,213,152,.16); --bad:#FF6B76; --bad-bg:rgba(255,107,118,.16); --tone:rgba(143,153,240,.16);
+    --overlay:rgba(4,6,26,.8); --track:#232A66; --hair:#7A6CFF; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1030; --panel:#161B47; --ink:#EAEEFF; --muted:#A3ABDD; --line:#8F99F0; --sh:#04061A;
+  --accent:#FF5C93; --accent-ink:#1A0A14; --mana:#4FD1F0; --gold:#F2B33D;
+  --good:#3DD598; --good-bg:rgba(61,213,152,.16); --bad:#FF6B76; --bad-bg:rgba(255,107,118,.16); --tone:rgba(143,153,240,.16);
+  --overlay:rgba(4,6,26,.8); --track:#232A66; --hair:#7A6CFF; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 16px/1.55 var(--body);
+  background-image:radial-gradient(var(--tone) 1.3px,transparent 1.4px);background-size:12px 12px;
+  padding-block:18px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto;min-width:0}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--mana);outline-offset:2px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.top .row{gap:10px}
+.brand{display:flex;align-items:baseline;gap:12px;background:none;border:0;padding:0;cursor:pointer;text-align:left;min-width:0;flex-wrap:wrap}
+.mark{font:400 32px/1 var(--display);letter-spacing:.02em;display:inline-block;transform:skewX(-8deg);color:var(--ink)}
+.mark em{font-style:normal;color:var(--accent)}
+.tag{font:500 13px var(--mono);color:var(--muted);letter-spacing:.04em}
+.link{background:var(--panel);border:2.5px solid var(--line);border-radius:6px;box-shadow:3px 3px 0 var(--sh);min-height:42px;padding:0 16px;font-weight:700;cursor:pointer;color:var(--ink)}
+
+.panel{background:var(--panel);border:2.5px solid var(--line);border-radius:6px;box-shadow:4px 4px 0 var(--sh);padding:18px;min-width:0}
+.panel h2{font:400 20px/1.2 var(--display);margin:0 0 6px;letter-spacing:.01em}
+.panel p{margin:0 0 12px}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono)}
+.label{font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+.btn{font:700 16px var(--body);min-height:46px;padding:0 22px;border:2.5px solid var(--line);border-radius:6px;background:var(--accent);color:var(--accent-ink);box-shadow:3px 3px 0 var(--sh);cursor:pointer;transition:transform .08s,box-shadow .08s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--sh)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--sh)}
+.btn.ghost{background:var(--panel);color:var(--ink)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:3px 3px 0 var(--sh)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+
+/* home */
+.home-stack{display:grid;gap:22px}
+.home-grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.region-main{position:relative;overflow:hidden;border:2.5px solid var(--line);border-radius:6px;box-shadow:4px 4px 0 var(--sh);padding:22px;color:#F2EEFF;
+  background:linear-gradient(180deg,#0B1033 0%,#241663 62%,#4A2380 100%)}
+.region-main::before{content:"";position:absolute;inset:0;background:radial-gradient(rgba(255,255,255,.5) 1px,transparent 1.4px) 0 0/44px 44px;opacity:.35;pointer-events:none}
+.region-main>*{position:relative}
+.region-main .label{color:#FFD36B}
+.region-main h2{font:400 30px/1.1 var(--display);margin:6px 0 8px;transform:skewX(-6deg);transform-origin:left}
+.region-main p{max-width:56ch;margin:0 0 16px;color:#E3DEFF}
+.region-main .mono{color:#C9C3F5;font-size:13px}
+.lanrow{display:flex;gap:10px;margin:0 0 18px;flex-wrap:wrap}
+.lan{width:24px;flex:none}
+.lan svg{display:block;width:100%;height:auto;overflow:visible}
+.lan .body{fill:transparent;stroke:#7F76C8;stroke-width:2;stroke-linejoin:round}
+.lan .cap{stroke:#7F76C8;stroke-width:2;fill:none;stroke-linecap:round}
+.lan.on .body{fill:#FFD36B;stroke:#FFF1C2;filter:drop-shadow(0 0 6px rgba(255,211,107,.9))}
+.lan.on .cap{stroke:#FFF1C2}
+.sealed{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));margin-top:12px}
+.seal{border:2px dashed var(--line);border-radius:4px;padding:12px;background:var(--bg);min-width:0}
+.seal .n{font-weight:700;display:flex;gap:8px;align-items:center}
+.seal .n svg{width:16px;height:16px;flex:none}
+.seal .s{font:500 12px var(--mono);color:var(--muted)}
+
+.talk{display:flex;gap:16px;align-items:center;margin-bottom:16px}
+.mascot{width:132px;flex:none}
+.mascot svg{display:block;width:100%;height:auto;overflow:visible}
+.bubble{position:relative;background:var(--panel);border:2.5px solid var(--line);border-radius:6px;padding:10px 14px;font-weight:700;box-shadow:3px 3px 0 var(--sh);min-width:0}
+.bubble::after{content:"";position:absolute;width:14px;height:14px;background:var(--panel);border-left:2.5px solid var(--line);border-bottom:2.5px solid var(--line);left:-9px;top:20px;transform:rotate(45deg)}
+.lvrow{display:flex;gap:14px;align-items:center;margin-bottom:12px}
+.lv{position:relative;width:84px;height:84px;flex:none;display:grid;place-items:center}
+.lv::before{content:"";position:absolute;inset:12px;background:var(--gold);border:2.5px solid var(--line);transform:rotate(45deg);box-shadow:3px 3px 0 var(--sh)}
+.lv span{position:relative;font:400 28px/1 var(--display);color:var(--on-gold)}
+.lvtext{min-width:0}
+.rank{font:400 24px/1.1 var(--display)}
+.xpbar{height:18px;border:2.5px solid var(--line);border-radius:4px;background:var(--track);overflow:hidden}
+.xpbar i{display:block;height:100%;width:0;background:repeating-linear-gradient(-45deg,var(--mana) 0 8px,color-mix(in srgb,var(--mana) 70%,#fff) 8px 16px);transition:width .5s ease}
+.chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.chip{border:2px solid var(--line);border-radius:4px;padding:4px 10px;font:500 13px var(--mono);background:var(--bg)}
+.chip b{font-weight:500;color:var(--accent)}
+
+/* shared play UI */
+.quest-wrap{max-width:780px;margin:0 auto;display:grid;gap:18px}
+.qbar{display:grid;gap:8px}
+.qbar .row{justify-content:space-between}
+.segs{display:flex;gap:4px}
+.seg{flex:1;height:12px;border:2px solid var(--line);background:var(--panel)}
+.seg.done{background:var(--mana)}
+.seg.now{background:var(--accent)}
+.qhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.case{font-size:17px;line-height:1.65;margin:0 0 14px!important}
+.ask{font:400 19px/1.35 var(--display);margin:0 0 16px!important;text-wrap:balance}
+.opts{display:grid;gap:12px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;padding:12px 14px;min-height:52px;background:var(--panel);color:var(--ink);border:2.5px solid var(--line);border-radius:6px;font:500 16px/1.45 var(--body);cursor:pointer;box-shadow:3px 3px 0 var(--sh);transition:transform .08s}
+.opt:hover:not(:disabled){transform:translate(-1px,-1px)}
+.opt:disabled{cursor:default;color:var(--ink)}
+.opt .k{font:500 14px var(--mono);width:28px;height:28px;flex:none;display:grid;place-items:center;border:2px solid var(--line);border-radius:50%}
+.opt .t{min-width:0;padding-top:2px}
+.opt.right{border-color:var(--good);background:var(--good-bg)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.opt.dim{opacity:.55}
+textarea{width:100%;min-height:92px;padding:12px;border:2.5px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:500 16px/1.5 var(--body);resize:vertical}
+.fb{margin-top:18px;border-top:2.5px dashed var(--line);padding-top:16px}
+.fb-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font:400 20px var(--display);margin-bottom:8px}
+.fb-head.good{color:var(--good)}
+.fb-head.bad{color:var(--bad)}
+.fb-head .topic{font:500 13px var(--mono);color:var(--muted);align-self:center}
+.fb ul{margin:0 0 12px;padding-left:20px}
+.fb li{margin-bottom:4px}
+.pearl{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border:2px solid var(--line);border-radius:4px;padding:10px 12px;margin-top:6px}
+.pearl b{font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);flex:none;padding-top:3px}
+.rate{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+.nextrow{margin-top:18px;display:flex;justify-content:flex-end}
+.boss-tag{display:inline-block;font:400 13px var(--display);background:var(--accent);color:var(--accent-ink);border:2px solid var(--line);padding:2px 10px;border-radius:4px;margin-left:8px}
+
+/* story scene */
+.stage{position:relative;overflow:hidden;border:2.5px solid var(--line);border-radius:6px;box-shadow:4px 4px 0 var(--sh);color:#F2EEFF;min-height:460px;display:flex;flex-direction:column;justify-content:flex-end;
+  background:linear-gradient(180deg,#0B1033 0%,#241663 58%,#4A2380 100%)}
+.stage::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:radial-gradient(rgba(255,255,255,.6) 1px,transparent 1.4px) 0 0/46px 46px,radial-gradient(rgba(255,211,107,.55) 1.2px,transparent 1.6px) 23px 23px/62px 62px}
+body[data-flavor="full"] .stage::before{animation:drift 60s linear infinite}
+@keyframes drift{to{background-position:0 -460px,23px -460px}}
+.road{position:absolute;left:0;right:0;top:30px;display:flex;justify-content:space-around;padding:0 18px;gap:6px}
+.dlg{position:relative;margin:12px;display:flex;gap:14px;align-items:flex-end}
+.portrait{width:112px;flex:none}
+.portrait .mascot{width:100%}
+.box{flex:1;min-width:0;background:rgba(10,12,40,.86);border:2.5px solid #FFD36B;border-radius:6px;padding:22px 16px 14px;position:relative;cursor:pointer}
+.nameplate{position:absolute;top:-16px;left:14px;background:#FFD36B;color:#1B1F4B;border:2.5px solid #1B1F4B;font:400 14px var(--display);padding:2px 12px;border-radius:4px}
+.box.hush{border-color:#FF5C93}
+.box.hush .nameplate{background:#FF5C93}
+.box.narr{border-color:#7F76C8}
+.box.narr p{font-style:italic;color:#DAD5FF}
+.box.you{border-color:#4FD1F0}
+.box.you .nameplate{background:#4FD1F0}
+.box p{margin:0;font-size:18px;line-height:1.65;min-height:3.3em;color:#F2EEFF}
+.dlg-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px}
+.skip{background:none;border:0;color:#B9B3F0;font:500 13px var(--mono);cursor:pointer;text-decoration:underline;padding:8px 0}
+.dlg-actions .btn{min-height:42px}
+
+/* result, codex, settings */
+.res-grid,.codex-grid{display:grid;gap:22px;max-width:780px;margin:0 auto}
+.stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin:14px 0}
+.stat{border:2px solid var(--line);border-radius:4px;padding:10px 12px;background:var(--bg)}
+.stat .v{font:400 26px/1.1 var(--display)}
+.rlist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.rlist li{display:flex;gap:10px;align-items:center;justify-content:space-between;border:2px solid var(--line);border-radius:4px;padding:8px 12px;background:var(--bg)}
+.rlist .tt{min-width:0}
+.rlist .ok{font:500 12px var(--mono);color:var(--good);flex:none}
+.rlist .no{font:500 12px var(--mono);color:var(--bad);flex:none}
+.entry{border:2px solid var(--line);border-radius:4px;padding:12px;background:var(--bg)}
+.entry b{display:block;margin-bottom:2px}
+.entry.locked{border-style:dashed;color:var(--muted)}
+.set-wrap{max-width:640px;margin:0 auto;display:grid;gap:22px}
+.seg-ctl{display:flex;flex-wrap:wrap;gap:0;margin:8px 0 6px}
+.seg-ctl button{min-height:44px;padding:0 16px;border:2.5px solid var(--line);background:var(--panel);color:var(--ink);font-weight:700;cursor:pointer;margin-right:-2.5px}
+.seg-ctl button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+
+/* level up + toast */
+.lvup{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--overlay);
+  padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px,env(safe-area-inset-left,0px))}
+.lvup-card{position:relative;overflow:hidden;max-width:420px;width:100%;text-align:center;background:var(--panel);border:3px solid var(--line);border-radius:6px;box-shadow:6px 6px 0 var(--sh);padding:26px 20px}
+.burst{display:none;position:absolute;inset:-60%;background:repeating-conic-gradient(var(--accent) 0 5deg,transparent 5deg 10deg);opacity:.22;
+  -webkit-mask:radial-gradient(circle,#000 0,transparent 62%);mask:radial-gradient(circle,#000 0,transparent 62%)}
+body[data-flavor="full"] .burst{display:block}
+.lvup-card>*{position:relative}
+.lvup-title{font:400 40px/1 var(--display);transform:skewX(-8deg);color:var(--accent);margin:6px 0}
+.lvup-card .mascot{width:120px;margin:0 auto}
+.toast{position:fixed;left:50%;transform:translateX(-50%);z-index:60;max-width:min(92vw,420px);background:var(--ink);color:var(--bg);border:2.5px solid var(--line);border-radius:6px;padding:10px 16px;font-weight:700;text-align:center;
+  bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+
+/* flavor + motion */
+body[data-flavor="off"] .mascot,body[data-flavor="off"] .bubble,body[data-flavor="off"] .burst,body[data-flavor="off"] .portrait{display:none}
+body[data-flavor="off"] .talk{display:none}
+body[data-flavor="full"] .mascot svg{animation:bob 3.2s ease-in-out infinite}
+body[data-flavor="full"] .burst{animation:spin 18s linear infinite}
+@keyframes bob{50%{transform:translateY(-5px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
+svg [data-m]{display:none}
+svg[data-mood="idle"] [data-m~="idle"],svg[data-mood="happy"] [data-m~="happy"],svg[data-mood="oops"] [data-m~="oops"]{display:inline}
+
+footer{max-width:1040px;margin:34px auto 0;color:var(--muted);font-size:13px;line-height:1.6}
+footer p{margin:0 0 6px}
+
+@media (max-width:520px){
+  .mark{font-size:26px}
+  .mascot{width:96px}
+  .portrait{width:78px}
+  .ask{font-size:17px}
+  .case{font-size:16px}
+  .region-main h2{font-size:24px}
+  .box p{font-size:17px}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <button class="brand" id="brand" type="button" aria-label="Animed home">
+      <span class="mark">ANI<em>MED</em></span>
+      <span class="tag">clinical cases, level by level</span>
+    </button>
+    <div class="row">
+      <button class="link" id="btn-codex" type="button">Codex</button>
+      <button class="link" id="btn-settings" type="button">Settings</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section id="view-home">
+      <div class="home-stack">
+        <article class="region-main">
+          <div class="label">Region 1 · Neurology</div>
+          <h2>The Lantern Roads</h2>
+          <p>Every thought, memory and movement in Lumara travels along glowing roads of light. The lanterns are going dark, and only someone who can read the body can find out why.</p>
+          <div class="lanrow" id="rg-lan"></div>
+          <div class="row">
+            <button class="btn" id="btn-story" type="button">Begin story</button>
+            <button class="btn ghost" id="btn-replay" type="button" hidden>Replay cases</button>
+          </div>
+          <p class="mono" id="rg-status" style="margin:14px 0 0"></p>
+        </article>
+
+        <div class="home-grid">
+          <div class="panel">
+            <div class="talk">
+              <div class="mascot" id="home-mascot"></div>
+              <div class="bubble" id="home-bubble">Ready?</div>
+            </div>
+            <div class="lvrow">
+              <div class="lv"><span id="lv-num">1</span></div>
+              <div class="lvtext">
+                <div class="label">Rank</div>
+                <div class="rank" id="rank">Rookie</div>
+              </div>
+            </div>
+            <div class="row" style="justify-content:space-between;margin-bottom:6px">
+              <span class="label">Experience</span>
+              <span class="mono" id="xp-txt">0 / 50 XP</span>
+            </div>
+            <div class="xpbar" id="xpbar" role="progressbar" aria-label="Experience to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="xpfill"></i></div>
+            <div class="chips">
+              <span class="chip">Streak <b id="c-streak">0</b> days</span>
+              <span class="chip">Rest tokens <b id="c-tokens">1</b>/2</span>
+              <span class="chip">Pearls <b id="c-pearls">0</b></span>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="label">Review queue</div>
+            <h2 id="review-title">0 cases waiting</h2>
+            <p class="muted" id="review-desc">Cases you miss land here, so you can win them back.</p>
+            <button class="btn ghost" id="btn-review" type="button">Review mistakes</button>
+            <hr style="border:0;border-top:2.5px dashed var(--line);margin:18px 0">
+            <div class="label">Streak rule</div>
+            <p class="muted" style="margin:6px 0 0">Play any case in a day to keep your streak. A rest token covers one missed day, and you earn one every 7 days.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="label">The realm</div>
+          <h2>Sealed regions</h2>
+          <p class="muted" style="margin:0">Each region is a system of the body. They open as the story moves on. Names are working drafts.</p>
+          <div class="sealed" id="sealed"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STORY SCENE -->
+    <section id="view-scene" hidden>
+      <div class="quest-wrap">
+        <div class="qbar">
+          <div class="row">
+            <span class="label" id="sc-count">Step 1 of 11</span>
+            <span class="mono" id="sc-xp">+0 XP</span>
+          </div>
+          <div class="segs" id="sc-segs"></div>
+        </div>
+        <div class="stage">
+          <div class="road" id="sc-road"></div>
+          <div class="dlg">
+            <div class="portrait" id="sc-portrait"><div class="mascot" id="sc-mascot"></div></div>
+            <div class="box" id="sc-box" tabindex="0" role="button" aria-label="Advance dialogue">
+              <span class="nameplate" id="sc-name">Pulse</span>
+              <p id="sc-text"></p>
+              <div class="dlg-actions">
+                <button class="skip" id="sc-skip" type="button">Skip scene</button>
+                <button class="btn" id="sc-next" type="button">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CASE -->
+    <section id="view-quest" hidden>
+      <div class="quest-wrap">
+        <div class="qbar">
+          <div class="row">
+            <span class="label" id="q-count">Step 2 of 11</span>
+            <span class="mono" id="q-xp">+0 XP</span>
+          </div>
+          <div class="segs" id="q-segs"></div>
+        </div>
+        <div class="talk" style="margin-bottom:0">
+          <div class="mascot" id="q-mascot"></div>
+          <div class="bubble" id="q-bubble">Case incoming.</div>
+        </div>
+        <div class="panel">
+          <div class="qhead">
+            <span class="label"><span id="q-sys">Neurology</span><span class="boss-tag" id="q-boss" hidden>BOSS CASE</span></span>
+            <span class="mono" id="q-diff" style="letter-spacing:.2em">●○○</span>
+          </div>
+          <p class="case" id="q-case"></p>
+          <p class="ask" id="q-ask"></p>
+          <div id="q-body"></div>
+          <div class="fb" id="q-feedback" hidden></div>
+          <div class="nextrow"><button class="btn" id="q-next" type="button" hidden>Next case</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section id="view-result" hidden>
+      <div class="res-grid">
+        <div class="panel">
+          <div class="label" id="r-mode">Story</div>
+          <h2 id="r-head">Chapter cleared</h2>
+          <p id="r-sub" class="muted"></p>
+          <div class="lanrow" id="r-lan" style="margin-bottom:14px"></div>
+          <div class="stats">
+            <div class="stat"><div class="label">Correct</div><div class="v" id="r-score">0/0</div></div>
+            <div class="stat"><div class="label">XP earned</div><div class="v" id="r-xp">0</div></div>
+            <div class="stat"><div class="label">Level</div><div class="v" id="r-level">1</div></div>
+            <div class="stat"><div class="label">Streak</div><div class="v" id="r-streak">0</div></div>
+          </div>
+          <p id="r-note" class="muted"></p>
+          <div class="row"><button class="btn" id="r-home" type="button">Back to the realm</button></div>
+        </div>
+        <div class="panel">
+          <div class="label">Case log</div>
+          <h2>What you faced</h2>
+          <ul class="rlist" id="r-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- CODEX -->
+    <section id="view-codex" hidden>
+      <div class="codex-grid">
+        <div class="panel">
+          <div class="label">Story</div>
+          <h2>Lore</h2>
+          <div class="opts" id="cx-lore" style="margin-top:12px"></div>
+        </div>
+        <div class="panel">
+          <div class="label">Collected</div>
+          <h2>Ward pearls</h2>
+          <p class="muted">Every case you open adds its pearl here.</p>
+          <div class="opts" id="cx-pearls"></div>
+        </div>
+        <div><button class="btn ghost" id="cx-back" type="button">Back</button></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="view-settings" hidden>
+      <div class="set-wrap">
+        <div class="panel">
+          <div class="label">Look</div>
+          <h2>Anime flavor</h2>
+          <p class="muted">New to anime? Choose Off or Light. Every case works the same at every setting.</p>
+          <div class="seg-ctl" id="ctl-flavor">
+            <button type="button" data-v="off" aria-pressed="false">Off</button>
+            <button type="button" data-v="light" aria-pressed="false">Light</button>
+            <button type="button" data-v="full" aria-pressed="false">Full</button>
+          </div>
+          <p class="muted" style="margin:0;font-size:14px">Off hides the mascot. Light shows it without effects. Full adds motion and level-up effects.</p>
+        </div>
+        <div class="panel">
+          <h2>Theme</h2>
+          <div class="seg-ctl" id="ctl-theme">
+            <button type="button" data-v="auto" aria-pressed="false">Auto</button>
+            <button type="button" data-v="light" aria-pressed="false">Light</button>
+            <button type="button" data-v="dark" aria-pressed="false">Dark</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Your progress</h2>
+          <p class="muted">Progress is saved in this browser only. Clearing site data removes it.</p>
+          <div class="row" id="reset-row"><button class="btn ghost" id="btn-reset" type="button">Reset progress</button></div>
+          <div class="row" id="reset-confirm" hidden>
+            <span>Reset all XP, story progress and codex?</span>
+            <button class="btn" id="btn-reset-yes" type="button">Yes, reset</button>
+            <button class="btn ghost" id="btn-reset-no" type="button">Cancel</button>
+          </div>
+        </div>
+        <div><button class="btn ghost" id="set-back" type="button">Back</button></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Animed is a prototype for education. The cases are fictional and are not medical advice. Always follow current guidelines and your local protocols.</p>
+    <p>Story, names and cases are working drafts. Clinical content should be reviewed against current guidelines before a public launch. The mascot is an original placeholder character.</p>
+  </footer>
+</div>
+
+<div class="lvup" id="lvup" hidden role="dialog" aria-modal="true" aria-labelledby="lvup-title">
+  <div class="lvup-card">
+    <div class="burst"></div>
+    <div class="mascot" id="lu-mascot"></div>
+    <div class="lvup-title" id="lvup-title">LEVEL UP</div>
+    <div class="rank" id="lu-level">Level 2</div>
+    <p class="muted" id="lu-rank" style="margin:6px 0 16px"></p>
+    <button class="btn" id="lu-ok" type="button">Continue</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============ CASE LIBRARY (Neurology, chapter 1) ============
+   types: 'mcq' (options), 'think' (reveal and self-rate), 'boss' (several linked stages). */
+var CASES = {
+ 'n-001':{id:'n-001',type:'mcq',system:'Neurology',topic:'Localizing a left MCA stroke',difficulty:1,
+  case:'A 66-year-old man suddenly cannot find his words. His right face and right arm are weak, and the leg is only mildly affected. He understands you but speaks in short, halting phrases.',
+  ask:'Which vascular territory is most likely involved?',
+  options:['Left middle cerebral artery','Right middle cerebral artery','Left posterior cerebral artery','Basilar artery'],answer:0,
+  explain:'Aphasia points to the dominant hemisphere, usually the left. Face and arm weakness out of proportion to the leg fits the MCA territory, where the face and arm areas of the motor cortex sit on the lateral surface. The ACA mainly affects the leg. Halting, effortful speech with preserved understanding is a Broca-type (expressive) pattern.',
+  pearl:'Face and arm worse than leg suggests MCA. Leg worse than arm suggests ACA.'},
+
+ 'n-002':{id:'n-002',type:'mcq',system:'Neurology',topic:'First-line treatment of status epilepticus',difficulty:1,
+  case:'A 34-year-old woman has been having a generalized tonic-clonic seizure for 8 minutes and has not regained consciousness. IV access is in place.',
+  ask:'Which drug is first-line?',
+  options:['IV lorazepam','IV phenytoin loading dose','Oral levetiracetam','IV propofol infusion'],answer:0,
+  explain:'A seizure lasting 5 minutes or longer is treated as status epilepticus. A benzodiazepine is first-line: IV lorazepam, or IM midazolam if there is no IV access. Second-line agents such as levetiracetam, fosphenytoin or valproate follow if seizures continue. Anesthetic agents like propofol are for refractory status.',
+  pearl:'Check a fingerstick glucose early in any seizure. Hypoglycemia is quick to find and quick to treat.'},
+
+ 'n-003':{id:'n-003',type:'think',system:'Neurology',topic:'Guillain-Barre syndrome',difficulty:2,
+  case:'A 29-year-old man has had 3 days of tingling in his feet, followed by weakness climbing up both legs. He had diarrhea 2 weeks ago. Exam: symmetric leg weakness, absent knee and ankle reflexes, mild distal sensory loss.',
+  ask:'What is the likely diagnosis, what does the CSF classically show, and what is the biggest danger to monitor?',
+  answer:'Guillain-Barre syndrome (acute inflammatory demyelinating polyneuropathy), often after Campylobacter jejuni. CSF shows raised protein with a normal cell count (albuminocytologic dissociation). Monitor breathing (forced vital capacity) and autonomic instability. Treat with IVIG or plasma exchange.',
+  points:['Ascending, symmetric weakness with absent reflexes after an infection is the classic pattern','Measure FVC regularly; a fall toward 20 mL/kg is a common trigger to consider intubation','Nerve conduction studies show demyelination; CSF can be normal in the first week','Corticosteroids do not help in GBS'],
+  pearl:'Reflexes are lost early in GBS. If weakness is ascending but reflexes are brisk, think again.'},
+
+ 'n-004':{id:'n-004',type:'mcq',system:'Neurology',topic:'Acute bacterial meningitis',difficulty:2,
+  case:'A 20-year-old college student has had 12 hours of fever, severe headache, photophobia and neck stiffness. Temp 39.2 C, HR 118, BP 108/64. He is alert and oriented, with no focal deficit and no papilledema.',
+  ask:'What is the most appropriate immediate management?',
+  options:['Obtain a CT head, then an LP, and start antibiotics once results return','Draw blood cultures, then start IV ceftriaxone and vancomycin with dexamethasone without delay','Start oral amoxicillin and arrange outpatient follow-up','Order an MRI brain and wait for neurology review'],answer:1,
+  explain:'Bacterial meningitis is an emergency. Draw blood cultures and start empiric IV antibiotics right away rather than waiting for imaging or LP. Give dexamethasone with or just before the first antibiotic dose. CT before LP is reserved for risk factors such as focal deficits, papilledema, new seizures, markedly reduced consciousness or immunocompromise. Add ampicillin for patients over 50 or immunocompromised (Listeria).',
+  pearl:'Never let a CT scan delay antibiotics in suspected bacterial meningitis.'},
+
+ 'n-005':{id:'n-005',type:'mcq',system:'Neurology',topic:'Myasthenia gravis',difficulty:2,
+  case:'A 28-year-old woman has drooping eyelids and double vision that worsen by evening and improve after rest. Pupils are normal. Her speech becomes nasal as she counts aloud.',
+  ask:'Which antibody is most likely, and what should you image?',
+  options:['Anti-acetylcholine receptor antibodies; CT chest for thymoma','Anti-voltage-gated calcium channel antibodies; CT chest for small cell lung cancer','Anti-GQ1b antibodies; MRI brain','Anti-NMDA receptor antibodies; pelvic ultrasound'],answer:0,
+  explain:'Fatigable weakness of eye and bulbar muscles with normal pupils is classic for myasthenia gravis. Most patients have anti-AChR antibodies, and a CT chest looks for thymoma or thymic hyperplasia. Lambert-Eaton syndrome (anti-VGCC) tends to improve with repeated effort and is linked to small cell lung cancer.',
+  pearl:'Think myasthenia when weakness worsens with use and improves with rest. An ice pack on a ptotic eyelid can improve it.'},
+
+ 'n-boss':{id:'n-boss',type:'boss',system:'Neurology',topic:'The Silent Hall: large vessel occlusion stroke',difficulty:3,
+  case:'A 72-year-old man with atrial fibrillation, who stopped taking his anticoagulant, is brought in 90 minutes after sudden left-sided weakness. He ignores the left side of the room. BP 168/96, glucose 124 mg/dL, NIHSS 14.',
+  stages:[
+   {ask:'Which vascular territory is most likely affected?',
+    options:['Right middle cerebral artery','Left middle cerebral artery','Basilar artery','Left anterior cerebral artery'],answer:0,
+    explain:'Left-sided weakness and left neglect point to the right hemisphere. Neglect is a classic non-dominant parietal sign. The MCA is the usual vessel, especially with atrial fibrillation as an embolic source.'},
+   {ask:'A non-contrast CT shows no hemorrhage. Onset was 90 minutes ago and there are no contraindications. What now?',
+    options:['Give IV thrombolysis now and get CT angiography without delaying it','Wait for an MRI before deciding','Start a heparin infusion','Give aspirin and observe for 24 hours'],answer:0,
+    explain:'He is inside the 4.5-hour window and BP is below 185/110. Do not delay thrombolysis for vascular imaging. CT angiography is done at the same time to look for a large vessel occlusion.'},
+   {ask:'CT angiography shows a right M1 occlusion. What additional treatment should you arrange?',
+    options:['Mechanical thrombectomy','Continue thrombolysis alone','Start aspirin immediately after thrombolysis','Lower BP below 120/80 right away'],answer:0,
+    explain:'A proximal large vessel occlusion benefits from endovascular thrombectomy, in addition to thrombolysis. Aspirin is delayed until about 24 hours after thrombolysis, and aggressive BP lowering can reduce brain perfusion.'}],
+  pearl:'Time is brain, but so is imaging. In suspected large vessel occlusion, get CT angiography and call the thrombectomy team early.'}
+};
+
+/* ============ STORY (working draft) ============
+   Scene lines: who ('Narrator','Pulse','You','The Hush'), t (text), m (Pulse mood: idle, happy, oops).
+   unlock lists codex entries earned when the scene ends. */
+var CHAPTER = {id:'neuro-1',title:'Chapter 1: The Lanterns Go Dark',steps:[
+ {k:'scene',unlock:['lanterns','pulse','reading'],lines:[
+  {who:'Narrator',t:"The last thing you remember is the hospital's night shift, a cold cup of coffee, and a pager that would not stop."},
+  {who:'Narrator',t:'The next thing you feel is warm light on your face. You are standing on a road made of light.'},
+  {who:'Narrator',t:'Thousands of glowing threads stretch toward the horizon, humming softly. Some of them are dark.'},
+  {who:'Pulse',m:'happy',t:"You're awake! Finally. I'm Pulse, a lamplighter spirit. A very small one, I know."},
+  {who:'You',t:'Where am I? Is this a dream?'},
+  {who:'Pulse',m:'idle',t:'Close. This is Lumara, the realm between waking and sleeping. These are the Lantern Roads. Every thought, memory and movement in this world travels along them.'},
+  {who:'Pulse',m:'oops',t:'But the lanterns are going dark, one by one. Travelers freeze mid-step. Messengers forget where they were going. We call it the Hush.'},
+  {who:'You',t:'Why am I here?'},
+  {who:'Pulse',m:'idle',t:'You arrived carrying the old art, the one our world has no word for. Reading what a body is telling you: where the trouble is, what is causing it, and what to do next.'},
+  {who:'Pulse',m:'happy',t:'Help me read the Roads and we might light them again. Shall we look at the first trouble?'}]},
+ {k:'case',id:'n-001'},{k:'case',id:'n-002'},{k:'case',id:'n-003'},
+ {k:'scene',unlock:['hush'],lines:[
+  {who:'Narrator',t:'Three lanterns flare back to life along the road. The humming grows warmer.'},
+  {who:'Pulse',m:'happy',t:'You did it! Can you feel that? The messengers are moving again.'},
+  {who:'Pulse',m:'idle',t:'Funny thing, though. Look at the lantern bases. Every one was lit by hand, at the same height, in the same careful way.'},
+  {who:'Pulse',m:'oops',t:'The Hush does not do that. Someone built this road.'},
+  {who:'The Hush',t:'Stop reading, healer. Some roads are meant to stay dark.'},
+  {who:'Pulse',m:'oops',t:'...Did you hear that? Keep going. The next stretch is worse.'}]},
+ {k:'case',id:'n-004'},{k:'case',id:'n-005'},
+ {k:'scene',lines:[
+  {who:'Narrator',t:'The road ends at a vast, silent hall. Every lantern inside went dark at the same instant.'},
+  {who:'Pulse',m:'oops',t:'The Silent Hall. People are frozen in there, mid-sentence. This is the biggest case we have seen.'},
+  {who:'Pulse',m:'idle',t:'Take your time. Where is the trouble? How do we confirm it? What do we do about it?'}]},
+ {k:'case',id:'n-boss'},
+ {k:'scene',unlock:['engraving'],lines:[
+  {who:'Narrator',t:'The great lantern at the heart of the hall wakes with a soft chime. Light pours down every road.'},
+  {who:'Narrator',t:'The frozen travelers blink, stretch, and begin to talk all at once.'},
+  {who:'Pulse',m:'happy',t:'We did it. The first road is lit!'},
+  {who:'Narrator',t:'At the base of the great lantern you notice a faint scratch in the metal: a hospital name tag, hastily etched, with a small winged staff beside it.'},
+  {who:'You',t:'That is from my world.'},
+  {who:'Pulse',m:'oops',t:'Someone from your world has been here before. And I remember none of it. How is that possible?'},
+  {who:'The Hush',t:'They never finished either.'},
+  {who:'Narrator',t:'Chapter 1 complete. The next road is sealed, but you can feel it waiting.'}]}
+]};
+
+var LORE = {
+ lanterns:{title:'The Lantern Roads',text:'Luminous pathways that carry thought, memory and movement across Lumara. When a lantern goes dark, everything that travels through it stalls.'},
+ pulse:{title:'Pulse',text:'A small lamplighter spirit who found you on the road. Cheerful, curious, and perhaps hiding more than it says.'},
+ reading:{title:'The Old Art',text:'Reading the body for clues: find where the trouble is, confirm what it is, then decide what to do. Nobody in Lumara has a word for it.'},
+ hush:{title:'The Hush',text:'A creeping silence that darkens lanterns one by one. Nobody has seen its source, but it speaks.'},
+ engraving:{title:'The Engraving',text:'A faint hospital name tag and winged staff scratched into the great lantern of the Silent Hall, in a style from your own world. You are not the first traveler.'}
+};
+var LORE_ORDER=['lanterns','pulse','reading','hush','engraving'];
+
+var REGIONS = [
+ {name:'The Ember Forge',sys:'Cardiology'},
+ {name:'The Windless Reach',sys:'Pulmonology'},
+ {name:'The Tidal Vaults',sys:'Nephrology'},
+ {name:'The Gilded Orchard',sys:'Gastroenterology'},
+ {name:'The Clockwork Spire',sys:'Endocrinology'}
+];
+
+/* ============ MASCOT (original placeholder character) ============ */
+var MASCOT = '<svg viewBox="0 0 160 180" role="img" aria-label="Pulse, the Animed mascot" data-mood="idle">'
++'<rect x="70" y="112" width="20" height="30" fill="var(--skin)" stroke="var(--mline)" stroke-width="3"/>'
++'<path d="M28 180C28 148 52 136 80 136s52 12 52 44z" fill="var(--coat)" stroke="var(--mline)" stroke-width="3"/>'
++'<path d="M64 137L80 162 96 137z" fill="var(--accent)" stroke="var(--mline)" stroke-width="3" stroke-linejoin="round"/>'
++'<path d="M52 142C46 166 66 174 80 168" fill="none" stroke="var(--mline)" stroke-width="3" stroke-linecap="round"/>'
++'<circle cx="80" cy="168" r="5" fill="var(--mline)"/>'
++'<path d="M30 80C22 34 58 10 80 10s58 24 50 70v36c0 8-10 12-16 6H46c-6 6-16 2-16-6z" fill="var(--hair)" stroke="var(--mline)" stroke-width="3"/>'
++'<ellipse cx="80" cy="86" rx="42" ry="40" fill="var(--skin)" stroke="var(--mline)" stroke-width="3"/>'
++'<path d="M38 82C34 46 60 30 80 30s46 16 42 52C112 66 102 58 90 56 86 66 70 66 64 58 52 62 42 72 38 82z" fill="var(--hair)" stroke="var(--mline)" stroke-width="2.5" stroke-linejoin="round"/>'
++'<path d="M80 31V24L72 18 84 11 79 4" fill="none" stroke="var(--mline)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>'
++'<path d="M80 31V24L72 18 84 11 79 4" fill="none" stroke="var(--hair)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>'
++'<ellipse cx="50" cy="102" rx="7" ry="4" fill="var(--accent)" opacity=".35"/><ellipse cx="110" cy="102" rx="7" ry="4" fill="var(--accent)" opacity=".35"/>'
++'<g data-m="idle oops"><ellipse cx="62" cy="92" rx="8" ry="11" fill="var(--mline)"/><ellipse cx="98" cy="92" rx="8" ry="11" fill="var(--mline)"/>'
++'<circle cx="65" cy="88" r="3" fill="#fff"/><circle cx="101" cy="88" r="3" fill="#fff"/><circle cx="59" cy="96" r="1.6" fill="#fff"/><circle cx="95" cy="96" r="1.6" fill="#fff"/></g>'
++'<g data-m="happy" fill="none" stroke="var(--mline)" stroke-width="3.5" stroke-linecap="round"><path d="M53 94Q62 82 71 94"/><path d="M89 94Q98 82 107 94"/></g>'
++'<g data-m="oops" fill="none" stroke="var(--mline)" stroke-width="3" stroke-linecap="round"><path d="M52 80L70 74"/><path d="M108 80L90 74"/></g>'
++'<path data-m="idle" d="M72 108Q80 114 88 108" fill="none" stroke="var(--mline)" stroke-width="3" stroke-linecap="round"/>'
++'<g data-m="happy"><path d="M70 106Q80 124 90 106z" fill="var(--mline)" stroke="var(--mline)" stroke-width="2" stroke-linejoin="round"/><ellipse cx="80" cy="113" rx="5" ry="3" fill="var(--accent)"/></g>'
++'<ellipse data-m="oops" cx="80" cy="111" rx="5" ry="6" fill="var(--mline)"/>'
++'<g data-m="happy" fill="var(--gold)" stroke="var(--mline)" stroke-width="1.5" stroke-linejoin="round"><path d="M134 36l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/><path d="M22 52l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></g>'
++'</svg>';
+
+/* ============ STATE ============ */
+var KEY='animed-v2';
+function defaults(){return {xp:0,streak:0,tokens:1,lastPlayDate:null,mistakes:[],pearls:[],lore:[],story:{step:0,done:false},settings:{flavor:'full',theme:'auto'}};}
+function load(){
+  try{
+    var raw=localStorage.getItem(KEY);
+    if(raw){
+      var o=JSON.parse(raw), d=defaults();
+      for(var k in d){ if(!(k in o)) o[k]=d[k]; }
+      return o;
+    }
+  }catch(e){}
+  return defaults();
+}
+var S=load();
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+
+/* ============ HELPERS ============ */
+function $(id){ return document.getElementById(id); }
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function pad(n){ return n<10?'0'+n:''+n; }
+function today(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function daysBetween(a,b){ return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000); }
+function need(l){ return 50+25*(l-1); }
+function levelInfo(xp){ var l=1,rem=xp; while(rem>=need(l)){ rem-=need(l); l++; } return {level:l,into:rem,need:need(l)}; }
+function rankFor(l){ if(l>=20)return 'Master'; if(l>=15)return 'Specialist'; if(l>=10)return 'Clinician'; if(l>=5)return 'Apprentice'; return 'Rookie'; }
+function dots(n){ var s=''; for(var i=1;i<=3;i++) s+= i<=n?'●':'○'; return s; }
+function scrollTop(){ try{ window.scrollTo(0,0); }catch(e){} }
+function lanternRow(on,total){
+  var h='';
+  for(var i=0;i<total;i++){
+    h+='<span class="lan '+(i<on?'on':'off')+'"><svg viewBox="0 0 24 36" aria-hidden="true"><path class="cap" d="M12 2v5M9 7h6"/><path class="body" d="M6 9h12l2 6v9l-2 6H6l-2-6v-9z"/><path class="cap" d="M8 33h8"/></svg></span>';
+  }
+  return h;
+}
+var toastTimer=null;
+function toast(msg){ var t=$('toast'); t.textContent=msg; t.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.hidden=true; },3800); }
+
+var LINES={
+  start:['Case incoming.','Read the vitals first.','What does the data say?','Take a breath. Think it through.'],
+  good:['That is the one.','Clean read.','Nice catch.','Exactly right.'],
+  miss:['Good miss to learn from.','Close. Read the pearl.','It is queued for review.','Now you will remember it.']
+};
+
+/* ============ VIEWS ============ */
+var VIEWS=['home','scene','quest','result','codex','settings'];
+function show(v){ VIEWS.forEach(function(n){ $('view-'+n).hidden=(n!==v); }); scrollTop(); }
+function setMoodEl(id,mood){ var m=$(id); if(m&&m.firstChild) m.firstChild.setAttribute('data-mood',mood); }
+function setMood(prefix,mood,line){ setMoodEl(prefix+'-mascot',mood); var b=$(prefix+'-bubble'); if(b&&line) b.textContent=line; }
+
+/* ============ HOME ============ */
+function storyProgress(){ return S.story.done ? 1 : S.story.step/CHAPTER.steps.length; }
+function renderHome(){
+  var li=levelInfo(S.xp);
+  $('lv-num').textContent=li.level;
+  $('rank').textContent=rankFor(li.level);
+  $('xp-txt').textContent=li.into+' / '+li.need+' XP';
+  var pct=Math.round(li.into/li.need*100);
+  $('xpfill').style.width=pct+'%';
+  $('xpbar').setAttribute('aria-valuenow',pct);
+  $('c-streak').textContent=S.streak;
+  $('c-tokens').textContent=S.tokens;
+  $('c-pearls').textContent=S.pearls.length;
+
+  var prog=storyProgress();
+  $('rg-lan').innerHTML=lanternRow(Math.round(8*prog),8);
+  var started=S.story.step>0, done=S.story.done;
+  $('btn-story').hidden=done;
+  $('btn-story').textContent = started ? 'Continue story' : 'Begin story';
+  $('btn-replay').hidden=!done;
+  $('rg-status').textContent = done ? 'Chapter 1 cleared. The next region is sealed for now.'
+    : (started ? 'Chapter 1 · step '+S.story.step+' of '+CHAPTER.steps.length : 'Chapter 1 · '+CHAPTER.steps.length+' steps · about 15 minutes');
+  setMood('home', done?'happy':'idle', done ? 'The first road is lit. More await.' : (started ? 'The road is waiting. Continue?' : 'Ready to walk the Lantern Roads?'));
+
+  var m=S.mistakes.length;
+  $('review-title').textContent=m+(m===1?' case':' cases')+' waiting';
+  $('review-desc').textContent = m ? 'Win them back for full XP. Each one you get right leaves the queue.' : 'Cases you miss land here, so you can win them back.';
+  $('btn-review').disabled=!m;
+
+  var lock='<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 7V5a3 3 0 016 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+  var h=''; REGIONS.forEach(function(r){ h+='<div class="seal"><div class="n">'+lock+r.name+'</div><div class="s">'+r.sys+' · sealed</div></div>'; });
+  $('sealed').innerHTML=h;
+}
+
+/* ============ RUN ENGINE ============ */
+var run=null;
+function newRun(mode,steps,startI){
+  run={mode:mode,steps:steps,i:startI||0,xp:0,correct:0,cases:0,results:[],newLore:[],shownLevel:levelInfo(S.xp).level,cur:null,boss:null,onNext:null};
+}
+function startStory(){
+  var i=S.story.step; if(i>=CHAPTER.steps.length) i=0;
+  newRun('story',CHAPTER.steps,i);
+  playStep();
+}
+function startCases(mode){
+  var ids=Object.keys(CASES);
+  if(mode==='review') ids=ids.filter(function(id){ return S.mistakes.indexOf(id)>-1; });
+  shuffle(ids);
+  if(!ids.length) return;
+  newRun(mode,ids.map(function(id){ return {k:'case',id:id}; }),0);
+  playStep();
+}
+function playStep(){
+  var s=run.steps[run.i];
+  if(!s){ finishRun(); return; }
+  if(s.k==='scene') renderScene(s); else renderCase(CASES[s.id]);
+}
+function advance(){
+  run.i++;
+  if(run.mode==='story'){ S.story.step=run.i; save(); }
+  checkLevelUp();
+  playStep();
+}
+function checkLevelUp(){
+  var l=levelInfo(S.xp).level;
+  if(l>run.shownLevel){ run.shownLevel=l; showLevelUp(l); }
+}
+function renderSegs(id){
+  var segs=$(id); segs.innerHTML='';
+  for(var i=0;i<run.steps.length;i++){
+    var s=document.createElement('span');
+    s.className='seg'+(i<run.i?' done':(i===run.i?' now':''));
+    segs.appendChild(s);
+  }
+}
+function headerText(){ return (run.mode==='story'?'The Lantern Roads · ':(run.mode==='review'?'Review · ':'Practice · '))+'step '+(run.i+1)+' of '+run.steps.length; }
+
+/* ============ SCENES ============ */
+function renderScene(s){
+  show('scene');
+  run.curScene=s; run.li=0;
+  $('sc-count').textContent=headerText();
+  $('sc-xp').textContent='+'+run.xp+' XP';
+  renderSegs('sc-segs');
+  $('sc-road').innerHTML=lanternRow(Math.round(8*run.i/run.steps.length),8);
+  showLine();
+}
+function showLine(){
+  var lines=run.curScene.lines, ln=lines[run.li], who=ln.who;
+  var box=$('sc-box'), np=$('sc-name');
+  if(who==='Narrator'){ np.hidden=true; box.className='box narr'; }
+  else { np.hidden=false; np.textContent=who; box.className='box '+(who==='The Hush'?'hush':who.toLowerCase().replace(/[^a-z]/g,'')); }
+  $('sc-text').textContent=ln.t;
+  var pt=$('sc-portrait');
+  if(who==='Pulse'){ pt.hidden=false; setMoodEl('sc-mascot',ln.m||'idle'); } else { pt.hidden=true; }
+  $('sc-next').textContent = (run.li===lines.length-1) ? 'Continue' : 'Next';
+}
+function sceneNext(){
+  if(run.li<run.curScene.lines.length-1){ run.li++; showLine(); }
+  else endScene();
+}
+function endScene(){
+  var un=run.curScene.unlock||[], names=[];
+  un.forEach(function(id){
+    if(S.lore.indexOf(id)<0){ S.lore.push(id); names.push(LORE[id].title); run.newLore.push(LORE[id].title); }
+  });
+  if(names.length) toast('Codex updated: '+names.join(', '));
+  advance();
+}
+
+/* ============ CASES ============ */
+function buildOptions(opts,answerIdx,onPick){
+  var wrap=document.createElement('div'); wrap.className='opts';
+  var order=shuffle(opts.map(function(t,i){ return i; }));
+  order.forEach(function(oi,pos){
+    var b=document.createElement('button');
+    b.type='button'; b.className='opt'; b.dataset.oi=oi;
+    b.innerHTML='<span class="k">'+'ABCD'.charAt(pos)+'</span><span class="t"></span>';
+    b.querySelector('.t').textContent=opts[oi];
+    b.addEventListener('click',function(){ onPick(b,oi); });
+    wrap.appendChild(b);
+  });
+  return wrap;
+}
+function markOptions(btn,answerIdx){
+  Array.prototype.forEach.call($('q-body').querySelectorAll('.opt'),function(b){
+    var i=+b.dataset.oi; b.disabled=true;
+    if(i===answerIdx) b.classList.add('right');
+    else if(b===btn) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+}
+function showNext(label,fn){
+  var nx=$('q-next'); nx.textContent=label; nx.hidden=false; run.onNext=fn; nx.focus();
+}
+function pearlHtml(q){ return '<div class="pearl"><b>Ward pearl</b><span>'+q.pearl+'</span></div>'; }
+
+function renderCase(q){
+  show('quest');
+  run.cur=q; run.answered=false; run.boss=null;
+  $('q-count').textContent=headerText();
+  $('q-xp').textContent='+'+run.xp+' XP';
+  renderSegs('q-segs');
+  $('q-sys').textContent=q.system;
+  $('q-boss').hidden=(q.type!=='boss');
+  $('q-diff').textContent=dots(q.difficulty);
+  $('q-diff').setAttribute('aria-label','Difficulty '+q.difficulty+' of 3');
+  $('q-case').textContent=q.case;
+  $('q-body').innerHTML='';
+  var fb=$('q-feedback'); fb.innerHTML=''; fb.hidden=true;
+  $('q-next').hidden=true;
+  setMood('q','idle',pick(LINES.start));
+
+  if(q.type==='mcq'){
+    $('q-ask').textContent=q.ask;
+    $('q-body').appendChild(buildOptions(q.options,q.answer,function(btn,oi){ answerMcq(btn,oi); }));
+  } else if(q.type==='think'){
+    $('q-ask').textContent=q.ask;
+    $('q-body').innerHTML='<label class="label" for="q-note">Think first. Type your answer (optional)</label>'
+      +'<textarea id="q-note" placeholder="Diagnosis, next step, reasoning..."></textarea>'
+      +'<div class="row" style="margin-top:12px"><button class="btn" id="q-reveal" type="button">Reveal answer</button></div>';
+    $('q-reveal').addEventListener('click',revealThink);
+  } else {
+    run.boss={si:0,ok:0,gain:0};
+    renderBossStage();
+  }
+}
+
+function answerMcq(btn,oi){
+  if(run.answered) return;
+  run.answered=true;
+  var q=run.cur, ok=(oi===q.answer);
+  markOptions(btn,q.answer);
+  var fb=$('q-feedback');
+  fb.innerHTML='<div class="fb-head '+(ok?'good':'bad')+'"><span>'+(ok?'Correct':'Not this time')+'</span><span class="topic">'+q.topic+'</span></div><p>'+q.explain+'</p>'+pearlHtml(q);
+  fb.hidden=false;
+  record(ok, ok?10:3);
+  showNext(run.i===run.steps.length-1?'Finish':'Continue',advance);
+}
+
+function revealThink(){
+  if(run.answered) return;
+  run.answered=true;
+  var q=run.cur;
+  $('q-reveal').disabled=true;
+  var note=$('q-note'); if(note) note.readOnly=true;
+  var pts=''; q.points.forEach(function(p){ pts+='<li>'+p+'</li>'; });
+  var fb=$('q-feedback');
+  fb.innerHTML='<div class="fb-head"><span>Answer</span><span class="topic">'+q.topic+'</span></div><p>'+q.answer+'</p><ul>'+pts+'</ul>'+pearlHtml(q)
+    +'<div class="label" style="margin-top:16px">How did you do?</div>'
+    +'<div class="rate"><button class="btn" id="rate-yes" type="button">I had it</button><button class="btn ghost" id="rate-no" type="button">Not yet</button></div>';
+  fb.hidden=false;
+  $('rate-yes').addEventListener('click',function(){ rateThink(true); });
+  $('rate-no').addEventListener('click',function(){ rateThink(false); });
+  $('rate-yes').focus();
+}
+function rateThink(ok){
+  $('rate-yes').disabled=true; $('rate-no').disabled=true;
+  record(ok, ok?10:3);
+  showNext(run.i===run.steps.length-1?'Finish':'Continue',advance);
+}
+
+function renderBossStage(){
+  var q=run.cur, b=run.boss, st=q.stages[b.si];
+  run.answered=false;
+  $('q-ask').textContent='Stage '+(b.si+1)+' of '+q.stages.length+'. '+st.ask;
+  $('q-body').innerHTML=''; $('q-feedback').hidden=true; $('q-feedback').innerHTML=''; $('q-next').hidden=true;
+  $('q-body').appendChild(buildOptions(st.options,st.answer,function(btn,oi){ answerBoss(btn,oi); }));
+}
+function answerBoss(btn,oi){
+  if(run.answered) return;
+  run.answered=true;
+  var q=run.cur, b=run.boss, st=q.stages[b.si], ok=(oi===st.answer);
+  markOptions(btn,st.answer);
+  b.gain += ok?10:3; if(ok) b.ok++;
+  var last=(b.si===q.stages.length-1);
+  var html='<div class="fb-head '+(ok?'good':'bad')+'"><span>'+(ok?'Direct hit':'Missed')+'</span><span class="topic">Stage '+(b.si+1)+'</span></div><p>'+st.explain+'</p>';
+  if(last) html+=pearlHtml(q);
+  var fb=$('q-feedback'); fb.innerHTML=html; fb.hidden=false;
+  setMood('q', ok?'happy':'oops', pick(ok?LINES.good:LINES.miss));
+  if(!last){
+    showNext('Next stage',function(){ b.si++; renderBossStage(); });
+  } else {
+    var all=(b.ok===q.stages.length);
+    record(all, b.gain+(all?10:0), true);
+    setMood('q', all?'happy':'oops', all?'The Hall is yours.':'Bruised, but the Hall still falls.');
+    showNext(run.i===run.steps.length-1?'Finish':'Continue',advance);
+  }
+}
+
+function touchStreak(){
+  var t=today(); if(S.lastPlayDate===t) return;
+  var gap=S.lastPlayDate?daysBetween(S.lastPlayDate,t):null;
+  if(gap===null) S.streak=1;
+  else if(gap===1) S.streak+=1;
+  else if(gap===2 && S.tokens>0){ S.tokens--; S.streak+=1; }
+  else S.streak=1;
+  if(S.streak%7===0) S.tokens=Math.min(2,S.tokens+1);
+  S.lastPlayDate=t;
+}
+
+function record(ok,baseGain,keepMood){
+  var q=run.cur, prac=(run.mode==='practice');
+  var gain = prac ? Math.max(1,Math.floor(baseGain/2)) : baseGain;
+  S.xp+=gain; run.xp+=gain; run.cases++; if(ok) run.correct++;
+  touchStreak();
+  if(S.pearls.indexOf(q.id)<0) S.pearls.push(q.id);
+  if(!prac){
+    var idx=S.mistakes.indexOf(q.id);
+    if(ok && idx>-1) S.mistakes.splice(idx,1);
+    if(!ok && idx===-1) S.mistakes.push(q.id);
+  }
+  run.results.push({q:q,ok:ok});
+  save();
+  $('q-xp').textContent='+'+run.xp+' XP';
+  if(!keepMood) setMood('q', ok?'happy':'oops', pick(ok?LINES.good:LINES.miss));
+}
+
+/* ============ RESULT ============ */
+function finishRun(){
+  var firstClear=false;
+  if(run.mode==='story' && !S.story.done){
+    S.story.done=true; S.story.step=CHAPTER.steps.length;
+    S.xp+=50; run.xp+=50; firstClear=true;
+  }
+  save();
+  renderResult(firstClear);
+  show('result');
+  checkLevelUp();
+}
+function renderResult(firstClear){
+  var n=run.cases, pct=n?run.correct/n:0;
+  var story=(run.mode==='story');
+  $('r-mode').textContent = story?'Story':(run.mode==='review'?'Review run':'Practice run');
+  $('r-head').textContent = story?'Chapter 1 cleared':(pct>=0.8?'Strong run':(pct>=0.5?'Solid run':'Tough set'));
+  $('r-sub').textContent = story
+    ? 'The Lantern Roads shine again. The next region is sealed for now.'
+    : (pct>=0.8?'You read these cases well.':(pct>=0.5?'The misses are queued so you can win them back.':'Every miss is in your review queue. That is how the pearls stick.'));
+  $('r-lan').innerHTML = story ? lanternRow(8,8) : '';
+  $('r-lan').hidden = !story;
+  $('r-score').textContent=run.correct+'/'+n;
+  $('r-xp').textContent='+'+run.xp;
+  $('r-level').textContent=levelInfo(S.xp).level;
+  $('r-streak').textContent=S.streak;
+  var note='';
+  if(firstClear) note+='Chapter bonus of 50 XP included. ';
+  if(run.newLore.length) note+='Codex updated: '+run.newLore.join(', ')+'. ';
+  if(run.mode==='practice') note+='Practice runs give half XP and keep your review queue unchanged. ';
+  if(run.mode==='review') note+='Cases you got right have left your review queue. ';
+  $('r-note').textContent=note;
+  var html='';
+  run.results.forEach(function(r){
+    html+='<li><span class="tt"><b>'+r.q.topic+'</b></span><span class="'+(r.ok?'ok':'no')+'">'+(r.ok?'Correct':'Review')+'</span></li>';
+  });
+  $('r-list').innerHTML=html;
+}
+
+/* ============ LEVEL UP ============ */
+function showLevelUp(l){
+  var prev=rankFor(l-1), now=rankFor(l);
+  $('lu-level').textContent='Level '+l;
+  $('lu-rank').textContent = prev!==now ? 'New rank: '+now+'.' : 'Rank: '+now+'. Keep going.';
+  $('lvup').hidden=false;
+  $('lu-ok').focus();
+}
+
+/* ============ CODEX ============ */
+function renderCodex(){
+  var h='';
+  LORE_ORDER.forEach(function(id){
+    if(S.lore.indexOf(id)>-1) h+='<div class="entry"><b>'+LORE[id].title+'</b>'+LORE[id].text+'</div>';
+    else h+='<div class="entry locked"><b>???</b>Locked. Keep playing the story.</div>';
+  });
+  $('cx-lore').innerHTML=h;
+  var p='';
+  S.pearls.forEach(function(id){
+    var q=CASES[id]; if(!q) return;
+    p+='<div class="entry"><b>'+q.topic+'</b>'+q.pearl+'</div>';
+  });
+  $('cx-pearls').innerHTML = p || '<div class="entry locked">No pearls yet. Open a case to collect one.</div>';
+}
+
+/* ============ SETTINGS ============ */
+function applySettings(){
+  document.body.setAttribute('data-flavor',S.settings.flavor);
+  var root=document.documentElement;
+  if(S.settings.theme==='auto') root.removeAttribute('data-theme'); else root.setAttribute('data-theme',S.settings.theme);
+  ['flavor','theme'].forEach(function(k){
+    Array.prototype.forEach.call($('ctl-'+k).querySelectorAll('button'),function(b){
+      b.setAttribute('aria-pressed', b.dataset.v===S.settings[k]?'true':'false');
+    });
+  });
+}
+function wireSeg(k){
+  $('ctl-'+k).addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    S.settings[k]=b.dataset.v; save(); applySettings();
+  });
+}
+
+/* ============ INIT ============ */
+['home','q','lu','sc'].forEach(function(p){ $(p+'-mascot').innerHTML=MASCOT; });
+$('lu-mascot').firstChild.setAttribute('data-mood','happy');
+applySettings();
+renderHome();
+
+function goHome(){ renderHome(); show('home'); }
+$('btn-story').addEventListener('click',startStory);
+$('btn-replay').addEventListener('click',function(){ startCases('practice'); });
+$('btn-review').addEventListener('click',function(){ startCases('review'); });
+$('q-next').addEventListener('click',function(){ if(run&&run.onNext) run.onNext(); });
+$('sc-next').addEventListener('click',function(e){ e.stopPropagation(); sceneNext(); });
+$('sc-box').addEventListener('click',sceneNext);
+$('sc-box').addEventListener('keydown',function(e){ if((e.key==='Enter'||e.key===' ')&&e.target===$('sc-box')){ e.preventDefault(); sceneNext(); } });
+$('sc-skip').addEventListener('click',function(e){ e.stopPropagation(); endScene(); });
+$('r-home').addEventListener('click',goHome);
+$('brand').addEventListener('click',goHome);
+$('btn-codex').addEventListener('click',function(){ renderCodex(); show('codex'); });
+$('cx-back').addEventListener('click',goHome);
+$('btn-settings').addEventListener('click',function(){ $('reset-confirm').hidden=true; $('reset-row').hidden=false; show('settings'); });
+$('set-back').addEventListener('click',goHome);
+$('lu-ok').addEventListener('click',function(){ $('lvup').hidden=true; });
+wireSeg('flavor'); wireSeg('theme');
+$('btn-reset').addEventListener('click',function(){ $('reset-row').hidden=true; $('reset-confirm').hidden=false; });
+$('btn-reset-no').addEventListener('click',function(){ $('reset-confirm').hidden=true; $('reset-row').hidden=false; });
+$('btn-reset-yes').addEventListener('click',function(){
+  var keep=S.settings; S=defaults(); S.settings=keep; save();
+  $('reset-confirm').hidden=true; $('reset-row').hidden=false; goHome();
+});
+})();
+</script>
+
+</body>
+</html>
