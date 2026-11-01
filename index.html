@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Animed</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DM+Mono:wght@400;500&family=Zen+Maru+Gothic:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-flavor="full">
+<canvas id="motes" aria-hidden="true"></canvas>
+<div class="wrap">
+  <header class="top">
+    <button class="brand" id="brand" type="button" aria-label="Animed home">
+      <span class="mark">ANI<em>MED</em></span>
+      <span class="tag">clinical cases, level by level</span>
+    </button>
+    <div class="row" id="hdr-actions" hidden>
+      <button class="link" id="btn-codex" type="button">Codex</button>
+      <button class="link" id="btn-settings" type="button">Settings</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- CHARACTER SELECT -->
+    <section id="view-select" hidden>
+      <div class="pick-head">
+        <div class="label">A door opens in the dark</div>
+        <h1>Choose your traveler</h1>
+        <p class="muted">You will be pulled into another world. Pick who steps through. The story is the same for both.</p>
+      </div>
+      <div class="pick-grid">
+        <button class="pick" id="pick-f" type="button" aria-pressed="false"><div class="art" id="pick-f-art"></div><div class="nm">Her</div><div class="ds">Quiet, observant, always listening first.</div></button>
+        <button class="pick" id="pick-m" type="button" aria-pressed="false"><div class="art" id="pick-m-art"></div><div class="nm">Him</div><div class="ds">Calm under pressure, curious about everything.</div></button>
+      </div>
+      <div class="namebox">
+        <label class="label" for="in-name">Your name (optional)</label>
+        <input type="text" id="in-name" maxlength="20" placeholder="Traveler" autocomplete="off">
+      </div>
+      <div class="row" style="justify-content:center"><button class="btn" id="btn-begin" type="button" disabled>Step through</button></div>
+    </section>
+
+    <!-- WORLD -->
+    <section id="view-world" hidden>
+      <div class="stack">
+        <div id="errbox" class="notice" hidden></div>
+        <div class="grid">
+          <div class="panel">
+            <div class="player">
+              <div class="art" id="pl-art"></div>
+              <div style="min-width:0">
+                <div class="label">Traveler</div>
+                <div class="rank" id="pl-name">Traveler</div>
+                <div style="margin-top:8px"><span class="lvbadge" id="lv-num">1</span><span class="rank" id="rank">Rookie</span></div>
+              </div>
+            </div>
+            <div class="row" style="justify-content:space-between;margin-bottom:6px"><span class="label">Experience</span><span class="mono" id="xp-txt">0 / 50 XP</span></div>
+            <div class="xpbar" id="xpbar" role="progressbar" aria-label="Experience to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="xpfill"></i></div>
+            <div class="chips">
+              <span class="chip">Streak <b id="c-streak">0</b> days</span>
+              <span class="chip">Rest tokens <b id="c-tokens">1</b>/2</span>
+              <span class="chip">Pearls <b id="c-pearls">0</b></span>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="label">Today</div>
+            <h2>Daily Trial</h2>
+            <p id="daily-desc"></p>
+            <button class="btn" id="btn-daily" type="button">Start Daily Trial</button>
+            <hr style="border:0;border-top:2.5px dashed var(--edge);margin:18px 0">
+            <div class="label">Review queue</div>
+            <h2 id="review-title">0 cases waiting</h2>
+            <p class="muted" id="review-desc"></p>
+            <button class="btn ghost" id="btn-review" type="button">Review mistakes</button>
+          </div>
+        </div>
+        <div class="stack" id="regions"></div>
+        <div>
+          <div class="label" style="margin-bottom:12px">Beyond the Gate</div>
+          <div class="grid" id="sealed"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REGION -->
+    <section id="view-region" hidden>
+      <div class="stack">
+        <div class="row"><button class="link" id="rg-back" type="button">Back to the realm</button></div>
+        <article class="panel" style="background:var(--panel)">
+          <div class="label" id="rg-label">Region</div>
+          <h2 id="rg-name" style="font-size:28px;margin:6px 0 8px">Region</h2>
+          <p id="rg-blurb" class="muted" style="max-width:62ch"></p>
+          <div class="lanrow" id="rg-lan"></div>
+          <div class="mono muted" id="rg-status"></div>
+        </article>
+        <div class="chap-list" id="chap-list"></div>
+      </div>
+    </section>
+
+    <!-- SCENE -->
+    <section id="view-scene" hidden>
+      <div class="runwrap">
+        <div class="qbar">
+          <div class="row"><span class="label" id="sc-count">Step</span><span class="mono" id="sc-xp">+0 XP</span></div>
+          <div class="segs" id="sc-segs"></div>
+        </div>
+        <div class="stage">
+          <div class="road" id="sc-road"></div>
+          <div class="dlg">
+            <div class="portrait" id="sc-portrait"><div class="art float" id="sc-art"></div></div>
+            <div class="box" id="sc-box" tabindex="0" role="button" aria-label="Advance dialogue">
+              <span class="nameplate" id="sc-name">Pulse</span>
+              <p id="sc-text"></p>
+              <div class="dlg-actions">
+                <button class="skip" id="sc-skip" type="button">Skip scene</button>
+                <button class="btn" id="sc-next" type="button">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CASE -->
+    <section id="view-quest" hidden>
+      <div class="runwrap">
+        <div class="qbar">
+          <div class="row"><span class="label" id="q-count">Step</span><span class="mono" id="q-xp">+0 XP</span></div>
+          <div class="segs" id="q-segs"></div>
+        </div>
+        <div class="talk">
+          <div class="art float" id="q-art"></div>
+          <div class="bubble" id="q-bubble">Case incoming.</div>
+        </div>
+        <div class="panel">
+          <div class="qhead">
+            <span class="label"><span id="q-sys">Region</span><span class="boss-tag" id="q-boss" hidden>BOSS CASE</span></span>
+            <span class="mono" id="q-diff" style="letter-spacing:.2em">●○○</span>
+          </div>
+          <div class="patient" id="q-patient" hidden></div>
+          <p class="case" id="q-case"></p>
+          <p class="ask" id="q-ask"></p>
+          <div id="q-body"></div>
+          <div class="fb" id="q-feedback" hidden></div>
+          <div class="nextrow"><button class="btn" id="q-next" type="button" hidden>Continue</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section id="view-result" hidden>
+      <div class="narrow">
+        <div class="panel">
+          <div class="label" id="r-mode">Story</div>
+          <h2 id="r-head">Chapter cleared</h2>
+          <p id="r-sub" class="muted"></p>
+          <div class="lanrow" id="r-lan"></div>
+          <div class="stats">
+            <div class="stat"><div class="label">Correct</div><div class="v" id="r-score">0/0</div></div>
+            <div class="stat"><div class="label">XP earned</div><div class="v" id="r-xp">0</div></div>
+            <div class="stat"><div class="label">Level</div><div class="v" id="r-level">1</div></div>
+            <div class="stat"><div class="label">Streak</div><div class="v" id="r-streak">0</div></div>
+          </div>
+          <p id="r-note" class="muted"></p>
+          <div class="row"><button class="btn pink" id="r-next" type="button" hidden>Next chapter</button><button class="btn ghost" id="r-back" type="button">Back</button></div>
+        </div>
+        <div class="panel">
+          <div class="label">Case log</div>
+          <h2>What you faced</h2>
+          <ul class="rlist" id="r-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- CODEX -->
+    <section id="view-codex" hidden>
+      <div class="narrow">
+        <div class="panel"><div class="label">Story</div><h2>Lore</h2><div class="opts" id="cx-lore" style="margin-top:12px"></div></div>
+        <div class="panel"><div class="label">Collected</div><h2>Ward pearls</h2><p class="muted">Every case you open adds its pearl here.</p><div class="opts" id="cx-pearls"></div></div>
+        <div><button class="btn ghost" id="cx-back" type="button">Back</button></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="view-settings" hidden>
+      <div class="narrow" style="max-width:640px">
+        <div class="panel">
+          <div class="label">Look</div>
+          <h2>Anime flavor</h2>
+          <p class="muted">New to anime? Choose Off or Light. Every case works the same at every setting.</p>
+          <div class="seg-ctl" id="ctl-flavor">
+            <button type="button" data-v="off" aria-pressed="false">Off</button>
+            <button type="button" data-v="light" aria-pressed="false">Light</button>
+            <button type="button" data-v="full" aria-pressed="false">Full</button>
+          </div>
+          <p class="muted" style="margin:0;font-size:14px">Off hides the characters. Light shows them still. Full adds motion, floating lights and level-up effects.</p>
+        </div>
+        <div class="panel">
+          <h2>Traveler</h2>
+          <p class="muted">Change your character or name. Your progress stays.</p>
+          <button class="btn ghost" id="btn-change" type="button">Change traveler</button>
+        </div>
+        <div class="panel">
+          <h2>Your progress</h2>
+          <p class="muted">Progress is saved in this browser only. Clearing site data removes it.</p>
+          <div class="row" id="reset-row"><button class="btn ghost" id="btn-reset" type="button">Reset progress</button></div>
+          <div class="row" id="reset-confirm" hidden>
+            <span>Reset all XP, story progress and codex?</span>
+            <button class="btn pink" id="btn-reset-yes" type="button">Yes, reset</button>
+            <button class="btn ghost" id="btn-reset-no" type="button">Cancel</button>
+          </div>
+        </div>
+        <div><button class="btn ghost" id="set-back" type="button">Back</button></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Animed is an educational prototype. Cases are fictional and are not medical advice. Always follow current guidelines and your local protocols.</p>
+    <p>Story, names and cases are working drafts. Clinical content should be reviewed against current guidelines before a public launch. Characters shown are original placeholders.</p>
+  </footer>
+</div>
+
+<div class="lvup" id="lvup" hidden role="dialog" aria-modal="true" aria-labelledby="lvup-title">
+  <div class="lvup-card">
+    <div class="burst"></div>
+    <div class="art float" id="lu-art"></div>
+    <div class="lvup-title" id="lvup-title">LEVEL UP</div>
+    <div class="rank" id="lu-level">Level 2</div>
+    <p class="muted" id="lu-rank" style="margin:6px 0 16px"></p>
+    <button class="btn" id="lu-ok" type="button">Continue</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script src="js/art.js"></script>
+<script src="data/world.js"></script>
+<script src="data/neurology.js"></script>
+<script src="js/engine.js"></script>
+</body>
+</html>
